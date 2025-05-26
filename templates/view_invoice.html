@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}Invoice {{ invoice.invoice_number }} - Invoice Generator{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <!-- Header Actions -->
+    <div class="flex justify-between items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Invoice {{ invoice.invoice_number }}</h1>
+            <p class="text-gray-600 mt-1">Created {{ invoice.created_at.strftime('%B %d, %Y') }}</p>
+        </div>
+        <div class="flex space-x-3">
+            <a href="{{ url_for('dashboard') }}" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+            </a>
+            <a href="{{ url_for('download_pdf', id=invoice.id) }}" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+                <i class="fas fa-download mr-2"></i>Download PDF
+            </a>
+        </div>
+    </div>
+
+    <!-- Invoice Preview -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
+        <!-- Invoice Header -->
+        <div class="flex justify-between items-start mb-8">
+            <div>
+                <h2 class="text-4xl font-bold text-blue-600 mb-4">INVOICE</h2>
+                <div class="space-y-1">
+                    <p><span class="font-semibold">Invoice #:</span> {{ invoice.invoice_number }}</p>
+                    <p><span class="font-semibold">Date:</span> {{ invoice.issue_date.strftime('%B %d, %Y') }}</p>
+                    <p><span class="font-semibold">Due Date:</span> {{ invoice.due_date.strftime('%B %d, %Y') }}</p>
+                </div>
+            </div>
+            <div class="text-right">
+                {% if invoice.status == 'paid' %}
+                    <span class="inline-flex px-4 py-2 text-sm font-semibold rounded-full bg-green-100 text-green-800">
+                        <i class="fas fa-check-circle mr-2"></i>PAID
+                    </span>
+                {% elif invoice.status == 'pending' %}
+                    <span class="inline-flex px-4 py-2 text-sm font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                        <i class="fas fa-clock mr-2"></i>PENDING
+                    </span>
+                {% else %}
+                    <span class="inline-flex px-4 py-2 text-sm font-semibold rounded-full bg-gray-100 text-gray-800">
+                        {{ invoice.status.upper() }}
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Bill To Section -->
+        <div class="mb-8">
+            <h3 class="text-lg font-semibold text-gray-900 mb-3">Bill To:</h3>
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <p class="font-semibold text-gray-900">{{ invoice.client_name }}</p>
+                {% if invoice.client_email %}
+                    <p class="text-gray-600">{{ invoice.client_email }}</p>
+                {% endif %}
+                {% if invoice.client_address %}
+                    <p class="text-gray-600 whitespace-pre-line">{{ invoice.client_address }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Items Table -->
+        <div class="mb-8">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="border-b-2 border-gray-200">
+                            <th class="text-left py-3 font-semibold text-gray-900">Description</th>
+                            <th class="text-right py-3 font-semibold text-gray-900 w-20">Qty</th>
+                            <th class="text-right py-3 font-semibold text-gray-900 w-24">Rate</th>
+                            <th class="text-right py-3 font-semibold text-gray-900 w-24">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in invoice.items %}
+                        <tr class="border-b border-gray-100">
+                            <td class="py-4 text-gray-900">{{ item.description }}</td>
+                            <td class="py-4 text-right text-gray-900">{{ item.quantity }}</td>
+                            <td class="py-4 text-right text-gray-900">${{ "%.2f"|format(item.rate) }}</td>
+                            <td class="py-4 text-right font-semibold text-gray-900">${{ "%.2f"|format(item.amount) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Totals Section -->
+        <div class="flex justify-end mb-8">
+            <div class="w-64 space-y-2">
+                <div class="flex justify-between py-2">
+                    <span class="text-gray-600">Subtotal:</span>
+                    <span class="font-semibold">${{ "%.2f"|format(invoice.subtotal) }}</span>
+                </div>
+                <div class="flex justify-between py-2">
+                    <span class="text-gray-600">Tax ({{ invoice.tax_rate }}%):</span>
+                    <span class="font-semibold">${{ "%.2f"|format(invoice.tax_amount) }}</span>
+                </div>
+                <div class="flex justify-between py-3 border-t-2 border-gray-200">
+                    <span class="text-lg font-bold text-gray-900">Total:</span>
+                    <span class="text-lg font-bold text-gray-900">${{ "%.2f"|format(invoice.total) }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notes Section -->
+        {% if invoice.notes %}
+        <div class="border-t border-gray-200 pt-8">
+            <h3 class="text-lg font-semibold text-gray-900 mb-3">Notes:</h3>
+            <p class="text-gray-700 whitespace-pre-line">{{ invoice.notes }}</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Status Update -->
+    <div class="mt-8 bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Update Status</h3>
+        <div class="flex space-x-3">
+            <button onclick="updateStatus('draft')" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors {{ 'bg-gray-100' if invoice.status == 'draft' }}">
+                Draft
+            </button>
+            <button onclick="updateStatus('sent')" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors {{ 'bg-blue-100' if invoice.status == 'sent' }}">
+                Sent
+            </button>
+            <button onclick="updateStatus('pending')" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors {{ 'bg-yellow-100' if invoice.status == 'pending' }}">
+                Pending
+            </button>
+            <button onclick="updateStatus('paid')" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors {{ 'bg-green-100' if invoice.status == 'paid' }}">
+                Paid
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+function updateStatus(status) {
+    fetch(`/invoice/{{ invoice.id }}/status`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({status: status})
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        }
+    });
+}
+</script>
+{% endblock %}

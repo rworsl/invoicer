@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>{% block title %}Invoice Generator{% endblock %}</title>
+    
+    <!-- Security Headers via Meta Tags -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+    
+    <!-- Preconnect for performance -->
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    
+    <!-- Stylesheets -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet" 
+          integrity="sha512-wnea99uKIC3TJF7v4eKk4Y+lMz2Mklv18+r4na2Gn1abDRPPOeef95xTzdwGD9e6zXJBteMIhZ1+68QC5byJZw==" crossorigin="anonymous">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet"
+          integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <a href="{{ url_for('index') }}" class="flex items-center space-x-2 hover:opacity-80 transition-opacity">
+                        <i class="fas fa-file-invoice-dollar text-blue-600 text-2xl"></i>
+                        <span class="text-xl font-bold text-gray-900">InvoiceGen</span>
+                    </a>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    {% if current_user.is_authenticated %}
+                        <!-- User Menu -->
+                        <div class="relative group">
+                            <button class="flex items-center space-x-2 text-gray-700 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg px-3 py-2">
+                                <span class="text-sm font-medium">{{ current_user.email|truncate(20) }}</span>
+                                {% if current_user.is_premium %}
+                                    <span class="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-2 py-1 rounded-full text-xs font-medium">
+                                        Premium
+                                    </span>
+                                {% else %}
+                                    <span class="bg-gray-200 text-gray-700 px-2 py-1 rounded-full text-xs font-medium">
+                                        Free
+                                    </span>
+                                {% endif %}
+                                <i class="fas fa-chevron-down text-xs"></i>
+                            </button>
+                            
+                            <!-- Dropdown Menu -->
+                            <div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                                <div class="py-1">
+                                    <a href="{{ url_for('dashboard') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                                        <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
+                                    </a>
+                                    <a href="{{ url_for('create_invoice') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                                        <i class="fas fa-plus mr-2"></i>New Invoice
+                                    </a>
+                                    <a href="{{ url_for('settings') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                                        <i class="fas fa-cog mr-2"></i>Settings
+                                    </a>
+                                    {% if not current_user.is_premium %}
+                                    <a href="{{ url_for('upgrade') }}" class="block px-4 py-2 text-sm text-purple-600 hover:bg-purple-50 transition-colors">
+                                        <i class="fas fa-crown mr-2"></i>Upgrade
+                                    </a>
+                                    {% endif %}
+                                    <div class="border-t border-gray-100"></div>
+                                    <a href="{{ url_for('logout') }}" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                                        <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <a href="{{ url_for('login') }}" class="text-gray-600 hover:text-gray-900 transition-colors">
+                            Login
+                        </a>
+                        <a href="{{ url_for('register') }}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                            Sign Up
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="fixed top-20 right-4 z-50 space-y-2" id="flash-container">
+                {% for category, message in messages %}
+                    <div class="flash-message flash-{{ category }} max-w-md bg-white border-l-4 p-4 rounded-lg shadow-lg animate-slide-in" data-category="{{ category }}">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                {% if category == 'success' %}
+                                    <i class="fas fa-check-circle text-green-500 mr-3"></i>
+                                {% elif category == 'error' %}
+                                    <i class="fas fa-exclamation-circle text-red-500 mr-3"></i>
+                                {% elif category == 'warning' %}
+                                    <i class="fas fa-exclamation-triangle text-yellow-500 mr-3"></i>
+                                {% else %}
+                                    <i class="fas fa-info-circle text-blue-500 mr-3"></i>
+                                {% endif %}
+                                <span class="text-sm font-medium">{{ message }}</span>
+                            </div>
+                            <button onclick="this.parentElement.parentElement.remove()" 
+                                    class="text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300 rounded">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Main Content -->
+    <main class="flex-1">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="flex items-center space-x-4 text-sm text-gray-600">
+                    <span>&copy; 2024 InvoiceGen. All rights reserved.</span>
+                    <span>•</span>
+                    <span>Secure Invoice Management</span>
+                </div>
+                <div class="flex items-center space-x-4 mt-4 md:mt-0">
+                    <span class="text-xs text-gray-500">
+                        <i class="fas fa-shield-alt mr-1"></i>
+                        SSL Secured
+                    </span>
+                    <span class="text-xs text-gray-500">
+                        <i class="fas fa-lock mr-1"></i>
+                        Privacy Protected
+                    </span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- CSRF Token for AJAX requests -->
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+    
+    <!-- Auto-hide flash messages -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const flashMessages = document.querySelectorAll('.flash-message');
+            flashMessages.forEach(function(message) {
+                setTimeout(function() {
+                    if (message.parentNode) {
+                        message.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
+                        message.style.opacity = '0';
+                        message.style.transform = 'translateX(100%)';
+                        setTimeout(function() {
+                            if (message.parentNode) {
+                                message.parentNode.removeChild(message);
+                            }
+                        }, 500);
+                    }
+                }, 5000);
+            });
+        });
+        
+        // CSRF setup for AJAX requests
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        
+        // Add CSRF token to all AJAX requests
+        if (window.fetch) {
+            const originalFetch = window.fetch;
+            window.fetch = function(url, options = {}) {
+                if (options.method && options.method.toUpperCase() !== 'GET') {
+                    options.headers = options.headers || {};
+                    options.headers['X-CSRFToken'] = csrfToken;
+                }
+                return originalFetch(url, options);
+            };
+        }
+    </script>
+</body>
+</html>

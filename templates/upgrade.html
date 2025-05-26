@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}Upgrade to Premium - Invoice Generator{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto text-center">
+    <div class="mb-12">
+        <h1 class="text-4xl font-bold text-gray-900 mb-4">Upgrade to Premium</h1>
+        <p class="text-xl text-gray-600">Unlock unlimited invoices and premium features</p>
+    </div>
+
+    <!-- Comparison Table -->
+    <div class="grid md:grid-cols-2 gap-8 mb-12">
+        <!-- Free Tier -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+            <div class="text-center mb-6">
+                <h3 class="text-2xl font-bold text-gray-900 mb-2">Free Tier</h3>
+                <div class="text-3xl font-bold text-gray-900">$0<span class="text-lg text-gray-500">/month</span></div>
+            </div>
+            
+            <ul class="space-y-4 mb-8">
+                <li class="flex items-center justify-center">
+                    <i class="fas fa-check text-green-500 mr-3"></i>
+                    <span class="text-gray-600">Up to 5 invoices</span>
+                </li>
+                <li class="flex items-center justify-center">
+                    <i class="fas fa-check text-green-500 mr-3"></i>
+                    <span class="text-gray-600">Basic template</span>
+                </li>
+                <li class="flex items-center justify-center">
+                    <i class="fas fa-check text-green-500 mr-3"></i>
+                    <span class="text-gray-600">PDF export</span>
+                </li>
+                <li class="flex items-center justify-center">
+                    <i class="fas fa-times text-red-500 mr-3"></i>
+                    <span class="text-gray-400">Premium templates</span>
+                </li>
+                <li class="flex items-center justify-center">
+                    <i class="fas fa-times text-red-500 mr-3"></i>
+                    <span class="text-gray-400">Priority support</span>
+                </li>
+            </ul>
+            
+            <div class="text-center">
+                <span class="text-gray-500">Current Plan</span>
+            </div>
+        </div>
+
+        <!-- Premium Tier -->
+        <div class="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl shadow-lg border-2 border-blue-200 p-8 relative">
+            <div class="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                <span class="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-4 py-1 rounded-full text-sm font-medium">Recommended</span>
+            </div>
+            
+            <div class="text-center mb-6">
+                <h3 class="text-2xl font-bold text-gray-900 mb-2">Premium</h3>
+                <div class="text-3xl font-bold text-gray-900">$9<span class="text-lg text-gray-500">/month</span></div>
+            </div>
+            
+            <ul class="space-y-4 mb-8">
+                <li class="flex items-center justify-center">
+                    <i class="fas fa-check text-green-500 mr-3"></i>
+                    <span class="text-gray-900 font-medium">Unlimited invoices</span>
+                </li>
+                <li class="flex items-center justify-center">
+                    <i class="fas fa-check text-green-500 mr-3"></i>
+                    <span class="text-gray-900 font-medium">All templates</span>
+                </li>
+                <li class="flex items-center justify-center">
+                    <i class="fas fa-check text-green-500 mr-3"></i>
+                    <span class="text-gray-900 font-medium">Advanced customization</span>
+                </li>
+                <li class="flex items-center justify-center">
+                    <i class="fas fa-check text-green-500 mr-3"></i>
+                    <span class="text-gray-900 font-medium">Premium templates</span>
+                </li>
+                <li class="flex items-center justify-center">
+                    <i class="fas fa-check text-green-500 mr-3"></i>
+                    <span class="text-gray-900 font-medium">Priority support</span>
+                </li>
+            </ul>
+            
+            <div class="text-center">
+                <form method="POST" action="{{ url_for('process_upgrade') }}">
+                    <button type="submit" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg">
+                        Upgrade Now
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Breakdown -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
+        <h2 class="text-2xl font-bold text-gray-900 mb-8">Premium Features</h2>
+        
+        <div class="grid md:grid-cols-3 gap-8">
+            <div class="text-center">
+                <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-infinity text-blue-600 text-2xl"></i>
+                </div>
+                <h3 class="text-lg font-semibold mb-2">Unlimited Invoices</h3>
+                <p class="text-gray-600">Create as many invoices as you need without any limits</p>
+            </div>
+            
+            <div class="text-center">
+                <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-palette text-purple-600 text-2xl"></i>
+                </div>
+                <h3 class="text-lg font-semibold mb-2">Premium Templates</h3>
+                <p class="text-gray-600">Access to professionally designed templates for every industry</p>
+            </div>
+            
+            <div class="text-center">
+                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-headset text-green-600 text-2xl"></i>
+                </div>
+                <h3 class="text-lg font-semibold mb-2">Priority Support</h3>
+                <p class="text-gray-600">Get help when you need it with priority customer support</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Money Back Guarantee -->
+    <div class="mt-12 text-center">
+        <div class="inline-flex items-center space-x-2 text-gray-600">
+            <i class="fas fa-shield-alt text-green-500"></i>
+            <span>30-day money-back guarantee</span>
+        </div>
+    </div>
+</div>
+{% endblock %}
