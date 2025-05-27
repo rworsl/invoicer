@@ -99,16 +99,13 @@ if %errorlevel% neq 0 (
     pip install bcrypt
 )
 
-echo ✅ Core dependencies checked
-
-REM Try to install optional dependencies
-echo 📦 Installing optional dependencies...
-pip install reportlab >nul 2>&1
-if %errorlevel% equ 0 (
-    echo ✅ ReportLab installed - PDF generation enabled
-) else (
-    echo ⚠️  ReportLab not installed - PDF generation disabled
+python -c "import reportlab" >nul 2>&1
+if %errorlevel% neq 0 (
+    echo 📥 Installing reportlab...
+    pip install reportlab
 )
+
+echo ✅ Core dependencies checked
 
 pip install flask-limiter >nul 2>&1
 if %errorlevel% equ 0 (
